@@ -8,7 +8,7 @@
 using lru::LruCache;
 
 TEST(LruCacheTest, ConstructorRejectsZeroCapacity) {
-    EXPECT_THROW(LruCache<int, int>(0), std::invalid_argument);
+    EXPECT_THROW((LruCache<int, int>(0)), std::invalid_argument);
 }
 
 TEST(LruCacheTest, GetOnMissReturnsNullopt) {
