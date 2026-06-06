@@ -12,7 +12,7 @@ namespace lru {
 
 /// A generic, header-only Least-Recently-Used (LRU) cache.
 ///
-/// All core operations (get, put, contains) run in amortized O(1) time by
+/// All core operations (get, put, peek, contains) run in amortized O(1) time by
 /// combining a doubly linked list that tracks recency order with a hash map
 /// from key to the list node holding that key's entry. The front of the list
 /// is the most-recently-used (MRU) entry; the back is the least-recently-used
@@ -43,6 +43,20 @@ public:
         }
         // Promote to front (MRU) without copying the stored value.
         entries_.splice(entries_.begin(), entries_, it->second);
+        return it->second->second;
+    }
+
+    /// Look up a key without affecting recency order.
+    ///
+    /// Like get(), returns the value on a hit and std::nullopt on a miss, but
+    /// unlike get() the entry is NOT promoted to most-recently-used. This makes
+    /// peek() a const, non-mutating read suitable for inspecting cache contents
+    /// without disturbing eviction order.
+    std::optional<V> peek(const K& key) const {
+        auto it = index_.find(key);
+        if (it == index_.end()) {
+            return std::nullopt;
+        }
         return it->second->second;
     }
 

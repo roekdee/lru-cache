@@ -40,6 +40,48 @@ TEST(LruCacheTest, ContainsDoesNotAffectRecency) {
     EXPECT_TRUE(cache.contains(3));
 }
 
+TEST(LruCacheTest, PeekOnMissReturnsNullopt) {
+    LruCache<int, std::string> cache(2);
+    EXPECT_FALSE(cache.peek(42).has_value());
+}
+
+TEST(LruCacheTest, PeekReturnsValueWithoutPromoting) {
+    LruCache<int, int> cache(2);
+    cache.put(1, 10);  // key 1 is currently the LRU entry
+    cache.put(2, 20);
+
+    // peek() returns the value but must NOT promote key 1.
+    auto value = cache.peek(1);
+    ASSERT_TRUE(value.has_value());
+    EXPECT_EQ(*value, 10);
+
+    // Because key 1 was not promoted, it stays the LRU entry and is the one
+    // evicted when a new key pushes the cache over capacity.
+    cache.put(3, 30);
+    EXPECT_FALSE(cache.contains(1));  // peeked-oldest got evicted
+    EXPECT_TRUE(cache.contains(2));
+    EXPECT_TRUE(cache.contains(3));
+}
+
+TEST(LruCacheTest, PeekIsConst) {
+    LruCache<int, int> cache(2);
+    cache.put(1, 10);
+
+    const auto& const_cache = cache;
+    auto value = const_cache.peek(1);
+    ASSERT_TRUE(value.has_value());
+    EXPECT_EQ(*value, 10);
+    EXPECT_FALSE(const_cache.peek(99).has_value());
+    EXPECT_TRUE(const_cache.contains(1));
+    EXPECT_FALSE(const_cache.contains(99));
+}
+
+TEST(LruCacheTest, ContainsOnMissReturnsFalse) {
+    LruCache<int, int> cache(2);
+    cache.put(1, 10);
+    EXPECT_FALSE(cache.contains(99));
+}
+
 TEST(LruCacheTest, EvictsLeastRecentlyUsedOnOverflow) {
     LruCache<int, int> cache(2);
     cache.put(1, 10);

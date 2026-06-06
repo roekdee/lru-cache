@@ -1,10 +1,12 @@
 # lru-cache
 
-A header-only LRU cache for C++17. `get`, `put`, and `contains` are O(1).
+A header-only LRU cache for C++17. `get`, `put`, `peek`, and `contains` are O(1).
 
 ![CI](https://github.com/roekdee/lru-cache/actions/workflows/ci.yml/badge.svg)
 
 It's a `LruCache<K, V>` that works with any hashable key. `get` hands back a `std::optional<V>` so a miss is just `nullopt` instead of an exception. Reads and updates bump the entry to most-recently-used; when you go over capacity the least-recently-used entry gets dropped.
+
+Need to look without touching the order? `peek` returns the value like `get` but leaves recency untouched, and `contains` just checks presence. Both are `const`, so you can call them on a `const` cache.
 
 No build step — just drop `include/lru_cache.hpp` into your project.
 
@@ -19,7 +21,11 @@ if (auto v = cache.get(1)) {        // hit, promotes key 1
     std::cout << *v << '\n';
 }
 
-cache.put(3, "three");              // over capacity -> evicts key 2
+if (auto v = cache.peek(2)) {       // hit, but does NOT promote key 2
+    std::cout << *v << '\n';
+}
+
+cache.put(3, "three");              // over capacity -> evicts key 2 (still LRU after peek)
 cache.contains(2);                  // false
 ```
 
